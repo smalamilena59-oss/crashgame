@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Crash - Online Multiplayer</title>
+    <title>TON Crash - Kitty Adventure</title>
     <style>
         * {
             margin: 0;
@@ -156,29 +156,75 @@
             50% { opacity: 0.5; }
         }
         
-        .multiplier-container {
+        /* Kitty Container */
+        .kitty-container {
             flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             margin: 20px 0;
+            cursor: pointer;
+        }
+        
+        .kitty {
+            font-size: 120px;
+            transition: all 0.1s ease;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+            position: relative;
+            z-index: 3;
+        }
+        
+        .kitty.crashed {
+            animation: fall 0.5s ease-in forwards;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(200px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .crash-text {
+            font-size: 48px;
+            font-weight: 900;
+            color: #ff4d4d;
+            text-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 2;
+        }
+        
+        .crash-text.show {
+            opacity: 1;
+            animation: shake 0.5s ease-in-out;
         }
         
         .multiplier {
-            font-size: 120px;
+            font-size: 72px;
             font-weight: 900;
             color: #ffd700;
             text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-            transition: all 0.1s ease;
+            margin-top: 10px;
             z-index: 2;
-            position: relative;
         }
         
         .multiplier.crashed {
             color: #ff4d4d;
             text-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
-            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         
         .explosion {
@@ -202,12 +248,6 @@
                 transform: scale(3);
                 opacity: 0;
             }
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         
         .game-status {
@@ -412,15 +452,17 @@
         <div class="game-panel">
             <div class="round-info">
                 <div class="round-number">Round #<span id="roundNumber">1</span></div>
-                <div class="timer" id="timer">Betting: 5s</div>
+                <div class="timer" id="timer">Next: 5s</div>
             </div>
             
-            <div class="multiplier-container" id="multiplierContainer">
+            <div class="kitty-container" id="kittyContainer">
+                <div class="kitty" id="kitty">🐱</div>
+                <div class="crash-text" id="crashText">CRASH!</div>
                 <div class="multiplier" id="multiplier">1.00x</div>
                 <div class="explosion" id="explosion" style="display: none;"></div>
             </div>
             
-            <div class="game-status" id="gameStatus">Betting open - 5 seconds left</div>
+            <div class="game-status" id="gameStatus">Next round in 5s...</div>
             
             <div class="bet-controls">
                 <div class="bet-input-group">
@@ -462,23 +504,26 @@
         let gameState = {
             roundNumber: 1,
             isActive: false,
-            bettingOpen: true,
+            bettingOpen: false,
             currentMultiplier: 1.00,
             crashPoint: 1.00,
-            bettingTimeLeft: 5,
+            timeUntilNext: 5,
             players: []
         };
         
         let gameInterval = null;
-        let bettingInterval = null;
         let countdownInterval = null;
         
-        // Initialize with some demo players
-        let demoPlayers = [
-            { id: 'demo1', name: 'CryptoKing', bet: 0, cashout: 0, avatar: '👑' },
-            { id: 'demo2', name: 'MoonHunter', bet: 0, cashout: 0, avatar: '🌙' },
-            { id: 'demo3', name: 'Whale', bet: 0, cashout: 0, avatar: '🐋' },
-            { id: 'demo4', name: 'LuckyOne', bet: 0, cashout: 0, avatar: '🍀' }
+        // Bot players with realistic behavior
+        let botPlayers = [
+            { id: 'bot1', name: 'CryptoKing', bet: 0, cashout: 0, avatar: '👑', risk: 'high' },
+            { id: 'bot2', name: 'MoonHunter', bet: 0, cashout: 0, avatar: '🌙', risk: 'medium' },
+            { id: 'bot3', name: 'Whale', bet: 0, cashout: 0, avatar: '🐋', risk: 'low' },
+            { id: 'bot4', name: 'LuckyOne', bet: 0, cashout: 0, avatar: '🍀', risk: 'medium' },
+            { id: 'bot5', name: 'Satoshi', bet: 0, cashout: 0, avatar: '🥷', risk: 'high' },
+            { id: 'bot6', name: 'DiamondHands', bet: 0, cashout: 0, avatar: '💎', risk: 'low' },
+            { id: 'bot7', name: 'PaperHands', bet: 0, cashout: 0, avatar: '📄', risk: 'very_low' },
+            { id: 'bot8', name: 'Rocket', bet: 0, cashout: 0, avatar: '🚀', risk: 'high' }
         ];
         
         // DOM elements
@@ -488,39 +533,62 @@
         const cashoutBtn = document.getElementById('cashoutBtn');
         const betAmountInput = document.getElementById('betAmount');
         const presetBtns = document.querySelectorAll('.preset-btn');
+        const kittyEl = document.getElementById('kitty');
+        const crashTextEl = document.getElementById('crashText');
+        const multiplierEl = document.getElementById('multiplier');
+        const explosionEl = document.getElementById('explosion');
         
         // Start the game
         function init() {
-            startBettingPhase();
+            startCountdown();
             updatePlayersList();
         }
         
-        // Start betting phase (5 seconds)
-        function startBettingPhase() {
-            gameState.bettingOpen = true;
-            gameState.bettingTimeLeft = 5;
+        // Start countdown between rounds
+        function startCountdown() {
+            gameState.bettingOpen = false;
             gameState.isActive = false;
+            gameState.timeUntilNext = 5;
             
-            // Enable betting controls
-            enableBettingControls(true);
+            // Enable betting controls? No, betting opens at 3 seconds
+            enableBettingControls(false);
             
             // Update UI
-            timerEl.textContent = `Betting: ${gameState.bettingTimeLeft}s`;
+            timerEl.textContent = `Next: ${gameState.timeUntilNext}s`;
             timerEl.classList.add('warning');
-            gameStatusEl.textContent = `Betting open - ${gameState.bettingTimeLeft} seconds left`;
+            gameStatusEl.textContent = `Next round in ${gameState.timeUntilNext}s...`;
+            
+            // Reset kitty and multiplier
+            kittyEl.classList.remove('crashed');
+            kittyEl.style.opacity = '1';
+            kittyEl.style.transform = 'none';
+            crashTextEl.classList.remove('show');
+            multiplierEl.classList.remove('crashed');
+            multiplierEl.textContent = '1.00x';
+            explosionEl.style.display = 'none';
             
             // Clear any existing intervals
-            if (bettingInterval) clearInterval(bettingInterval);
+            if (countdownInterval) clearInterval(countdownInterval);
             if (gameInterval) clearInterval(gameInterval);
             
-            // Start betting countdown
-            bettingInterval = setInterval(() => {
-                gameState.bettingTimeLeft--;
-                timerEl.textContent = `Betting: ${gameState.bettingTimeLeft}s`;
-                gameStatusEl.textContent = `Betting open - ${gameState.bettingTimeLeft} seconds left`;
+            // Start countdown
+            countdownInterval = setInterval(() => {
+                gameState.timeUntilNext--;
+                timerEl.textContent = `Next: ${gameState.timeUntilNext}s`;
                 
-                if (gameState.bettingTimeLeft <= 0) {
-                    clearInterval(bettingInterval);
+                // Open betting at 3 seconds
+                if (gameState.timeUntilNext === 3) {
+                    gameState.bettingOpen = true;
+                    enableBettingControls(true);
+                    gameStatusEl.textContent = `Betting open! ${gameState.timeUntilNext}s left`;
+                } else if (gameState.timeUntilNext <= 3 && gameState.timeUntilNext > 0) {
+                    gameStatusEl.textContent = `Betting open! ${gameState.timeUntilNext}s left`;
+                } else {
+                    gameStatusEl.textContent = `Next round in ${gameState.timeUntilNext}s...`;
+                }
+                
+                if (gameState.timeUntilNext <= 0) {
+                    clearInterval(countdownInterval);
                     startGameRound();
                 }
             }, 1000);
@@ -531,55 +599,135 @@
             gameState.bettingOpen = false;
             gameState.isActive = true;
             gameState.currentMultiplier = 1.00;
-            gameState.crashPoint = 1.00 + (Math.random() * 4.00); // Random between 1.00 and 5.00 for small x's
+            gameState.roundNumber++;
+            
+            // Generate crash point - mostly between 1.2 and 4.0, sometimes 1.0x
+            const rand = Math.random();
+            if (rand < 0.1) { // 10% chance of instant crash at 1.0x
+                gameState.crashPoint = 1.00;
+            } else {
+                // Biased towards lower multipliers
+                gameState.crashPoint = 1.2 + (Math.random() * 2.8); // Between 1.2 and 4.0
+                // Add occasional high multiplier (5% chance)
+                if (Math.random() < 0.05) {
+                    gameState.crashPoint = 4.0 + (Math.random() * 2.0); // Between 4.0 and 6.0
+                }
+            }
             
             // Disable betting controls
             enableBettingControls(false);
             
             // Update UI
-            timerEl.textContent = 'Game in progress';
+            timerEl.textContent = 'Flying...';
             timerEl.classList.remove('warning');
-            document.getElementById('multiplier').textContent = '1.00x';
-            document.getElementById('multiplier').classList.remove('crashed');
-            document.getElementById('explosion').style.display = 'none';
-            gameStatusEl.textContent = 'Game in progress...';
+            document.getElementById('roundNumber').textContent = gameState.roundNumber;
             
-            // Update demo players bets for this round
-            demoPlayers = demoPlayers.map(p => ({
-                ...p,
-                bet: Math.random() > 0.4 ? parseFloat((Math.random() * 5).toFixed(2)) : 0,
-                cashout: 0
-            }));
+            // Bot betting logic - not all bots bet, and they bet at different times
+            scheduleBotBets();
             
-            updatePlayersList();
-            
-            // Start multiplier
+            // Start multiplier (slower - every 100ms instead of 50ms)
             if (gameInterval) clearInterval(gameInterval);
             gameInterval = setInterval(() => {
                 if (gameState.isActive) {
                     gameState.currentMultiplier += 0.01;
-                    document.getElementById('multiplier').textContent = gameState.currentMultiplier.toFixed(2) + 'x';
+                    multiplierEl.textContent = gameState.currentMultiplier.toFixed(2) + 'x';
                     
                     // Check for crash
                     if (gameState.currentMultiplier >= gameState.crashPoint) {
                         crash();
                     }
                 }
-            }, 50);
+            }, 100); // Slower updates (was 50ms)
         }
         
-        // Enable/disable betting controls
-        function enableBettingControls(enabled) {
-            betAmountInput.disabled = !enabled;
-            presetBtns.forEach(btn => {
-                btn.disabled = !enabled;
+        // Schedule bot bets at different times
+        function scheduleBotBets() {
+            // Reset all bot bets
+            botPlayers = botPlayers.map(bot => ({
+                ...bot,
+                bet: 0,
+                cashout: 0
+            }));
+            
+            // Randomly select 2-4 bots to bet this round
+            const numBets = Math.floor(Math.random() * 3) + 2; // 2 to 4 bots
+            const shuffled = [...botPlayers].sort(() => 0.5 - Math.random());
+            const selectedBots = shuffled.slice(0, numBets);
+            
+            selectedBots.forEach((bot, index) => {
+                // Schedule bet at different times during the first 2 seconds
+                const betTime = (index + 1) * 400; // 400ms, 800ms, 1200ms, etc.
+                
+                setTimeout(() => {
+                    if (gameState.isActive) {
+                        // Find the bot in the array and update its bet
+                        const botIndex = botPlayers.findIndex(b => b.id === bot.id);
+                        if (botIndex !== -1) {
+                            // Random bet amount between 0.5 and 5.0
+                            const betAmount = parseFloat((Math.random() * 4.5 + 0.5).toFixed(2));
+                            botPlayers[botIndex].bet = betAmount;
+                            
+                            // Schedule cashout based on risk profile
+                            scheduleBotCashout(botPlayers[botIndex]);
+                            
+                            updatePlayersList();
+                        }
+                    }
+                }, betTime);
             });
+        }
+        
+        // Schedule bot cashout based on risk profile
+        function scheduleBotCashout(bot) {
+            if (!gameState.isActive) return;
             
-            // Place bet button is enabled only during betting phase AND if user hasn't bet yet
-            placeBetBtn.disabled = !enabled || currentUser.hasBet;
+            let cashoutMultiplier;
             
-            // Cashout button is enabled only during active game AND if user has bet and hasn't cashed out
-            cashoutBtn.disabled = !gameState.isActive || !currentUser.hasBet || currentUser.cashoutMultiplier > 0;
+            // Different risk profiles
+            switch(bot.risk) {
+                case 'very_low':
+                    // Cashes out very early (1.1x - 1.5x)
+                    cashoutMultiplier = 1.1 + Math.random() * 0.4;
+                    break;
+                case 'low':
+                    // Cashes out early (1.3x - 1.8x)
+                    cashoutMultiplier = 1.3 + Math.random() * 0.5;
+                    break;
+                case 'medium':
+                    // Medium risk (1.5x - 2.5x)
+                    cashoutMultiplier = 1.5 + Math.random() * 1.0;
+                    break;
+                case 'high':
+                    // High risk (2.0x - 3.5x)
+                    cashoutMultiplier = 2.0 + Math.random() * 1.5;
+                    break;
+                default:
+                    cashoutMultiplier = 1.5 + Math.random() * 1.0;
+            }
+            
+            // Don't cashout if multiplier already past their target
+            if (cashoutMultiplier >= gameState.crashPoint) {
+                // They'll lose
+                return;
+            }
+            
+            // Calculate when to cashout (when multiplier reaches their target)
+            const checkInterval = setInterval(() => {
+                if (!gameState.isActive) {
+                    clearInterval(checkInterval);
+                    return;
+                }
+                
+                if (gameState.currentMultiplier >= cashoutMultiplier) {
+                    // Bot cashes out
+                    const botIndex = botPlayers.findIndex(b => b.id === bot.id);
+                    if (botIndex !== -1 && botPlayers[botIndex].bet > 0 && botPlayers[botIndex].cashout === 0) {
+                        botPlayers[botIndex].cashout = gameState.currentMultiplier;
+                        updatePlayersList();
+                    }
+                    clearInterval(checkInterval);
+                }
+            }, 100);
         }
         
         // Crash the game
@@ -587,15 +735,14 @@
             gameState.isActive = false;
             clearInterval(gameInterval);
             
-            // Show explosion animation
-            const multiplier = document.getElementById('multiplier');
-            const explosion = document.getElementById('explosion');
+            // Show crash animation
+            kittyEl.classList.add('crashed');
+            crashTextEl.classList.add('show');
+            multiplierEl.classList.add('crashed');
+            explosionEl.style.display = 'block';
             
-            multiplier.classList.add('crashed');
-            explosion.style.display = 'block';
-            
-            // Count how many players were in the game
-            const playersInGame = demoPlayers.filter(p => p.bet > 0).length + (currentUser.hasBet ? 1 : 0);
+            // Count players in game
+            const playersInGame = botPlayers.filter(p => p.bet > 0).length + (currentUser.hasBet ? 1 : 0);
             
             // Add to history
             addToHistory(gameState.crashPoint, playersInGame);
@@ -607,14 +754,14 @@
                 // User lost their bet
                 currentUser.hasBet = false;
                 currentUser.currentBet = 0;
-                gameStatusEl.textContent += ` You lost ${currentUser.currentBet.toFixed(2)} TON`;
+                gameStatusEl.textContent += ` You lost!`;
                 updatePlayersList();
             }
             
-            // Start next betting phase after 2 seconds
+            // Start next round after 3 seconds
             setTimeout(() => {
-                startBettingPhase();
-            }, 2000);
+                startCountdown();
+            }, 3000);
         }
         
         // Cash out
@@ -682,7 +829,7 @@
             
             // Update UI
             document.getElementById('balance').textContent = currentUser.balance.toFixed(2);
-            placeBetBtn.disabled = true; // Can't place another bet this round
+            placeBetBtn.disabled = true;
             
             updatePlayersList();
             
@@ -695,6 +842,20 @@
             if (gameState.bettingOpen) {
                 document.getElementById('betAmount').value = amount;
             }
+        }
+        
+        // Enable/disable betting controls
+        function enableBettingControls(enabled) {
+            betAmountInput.disabled = !enabled;
+            presetBtns.forEach(btn => {
+                btn.disabled = !enabled;
+            });
+            
+            // Place bet button is enabled only during betting phase AND if user hasn't bet yet
+            placeBetBtn.disabled = !enabled || currentUser.hasBet;
+            
+            // Cashout button is enabled only during active game AND if user has bet and hasn't cashed out
+            cashoutBtn.disabled = !gameState.isActive || !currentUser.hasBet || currentUser.cashoutMultiplier > 0;
         }
         
         // Update players list
@@ -715,8 +876,8 @@
                 playersList.appendChild(userItem);
             }
             
-            // Add demo players
-            demoPlayers.forEach(player => {
+            // Add bot players with bets
+            botPlayers.forEach(player => {
                 if (player.bet > 0 || player.cashout > 0) {
                     const playerItem = createPlayerElement(player);
                     playersList.appendChild(playerItem);
@@ -758,7 +919,7 @@
         function addToHistory(multiplier, playersCount) {
             const historyList = document.getElementById('historyList');
             const item = document.createElement('div');
-            item.className = `history-item ${multiplier < 2 ? 'crash' : ''}`;
+            item.className = `history-item ${multiplier < 1.5 ? 'crash' : ''}`;
             
             const now = new Date();
             const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
