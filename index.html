@@ -809,6 +809,11 @@
             profile: document.getElementById('nav-profile')
         };
         
+        // Helper function to round to 1 decimal
+        function roundToOneDecimal(value) {
+            return Math.round(value * 10) / 10;
+        }
+        
         // Switch panel function
         function switchPanel(panelName) {
             // Hide all panels
@@ -931,7 +936,7 @@
                 playersGrid.appendChild(createPlayerChip({
                     name: currentUser.name + ' (You)',
                     bet: currentUser.currentBet,
-                    cashout: currentUser.cashoutMultiplier,
+                    cashout: currentUser.cashoutMultiplier > 0 ? roundToOneDecimal(currentUser.cashoutMultiplier) : 0,
                     avatar: currentUser.avatar,
                     isCurrent: true
                 }));
@@ -939,7 +944,10 @@
             
             botPlayers.forEach(player => {
                 if (player.bet > 0 || player.cashout > 0) {
-                    playersGrid.appendChild(createPlayerChip(player));
+                    playersGrid.appendChild(createPlayerChip({
+                        ...player,
+                        cashout: player.cashout > 0 ? roundToOneDecimal(player.cashout) : 0
+                    }));
                 }
             });
             
@@ -960,7 +968,7 @@
                 <div class="chip-avatar">${player.avatar}</div>
                 <div class="chip-info">
                     <div class="chip-name">${player.name}</div>
-                    ${player.bet ? `<div class="chip-bet">⬆️ ${player.bet} TON</div>` : ''}
+                    ${player.bet ? `<div class="chip-bet">⬆️ ${player.bet.toFixed(2)} TON</div>` : ''}
                     ${player.cashout ? `<div class="chip-bet">✅ ${player.cashout}x</div>` : ''}
                 </div>
             `;
@@ -971,9 +979,10 @@
         // Add to history stripes
         function addToHistory(multiplier) {
             const historyStripes = document.getElementById('historyStripes');
+            const roundedMultiplier = roundToOneDecimal(multiplier);
             const stripe = document.createElement('div');
-            stripe.className = `history-stripe ${multiplier < 1.5 ? 'crash' : ''}`;
-            stripe.textContent = multiplier.toFixed(2);
+            stripe.className = `history-stripe ${roundedMultiplier < 1.5 ? 'crash' : ''}`;
+            stripe.textContent = roundedMultiplier.toFixed(1) + 'x';
             
             historyStripes.insertBefore(stripe, historyStripes.firstChild);
             
@@ -1024,13 +1033,16 @@
             gameState.currentMultiplier = 1.00;
             gameState.roundNumber++;
             
+            // Generate crash point - mostly small multipliers (1.0x to 2.5x)
             const rand = Math.random();
-            if (rand < 0.1) {
+            if (rand < 0.15) { // 15% chance of instant crash at 1.0x
                 gameState.crashPoint = 1.00;
             } else {
-                gameState.crashPoint = 1.2 + (Math.random() * 2.8);
+                // Most crashes between 1.1x and 2.5x
+                gameState.crashPoint = 1.1 + (Math.random() * 1.4); // Between 1.1 and 2.5
+                // Rare high multiplier (5% chance) up to 3.5x
                 if (Math.random() < 0.05) {
-                    gameState.crashPoint = 4.0 + (Math.random() * 2.0);
+                    gameState.crashPoint = 2.5 + (Math.random() * 1.0); // Between 2.5 and 3.5
                 }
             }
             
@@ -1046,6 +1058,7 @@
             gameInterval = setInterval(() => {
                 if (gameState.isActive) {
                     gameState.currentMultiplier += 0.01;
+                    // Show multiplier with 2 decimals during game, but round for display
                     multiplierEl.textContent = gameState.currentMultiplier.toFixed(2) + 'x';
                     
                     if (gameState.currentMultiplier >= gameState.crashPoint) {
@@ -1093,12 +1106,22 @@
             
             let cashoutMultiplier;
             
+            // Adjust risk profiles for smaller multipliers
             switch(bot.risk) {
-                case 'very_low': cashoutMultiplier = 1.1 + Math.random() * 0.4; break;
-                case 'low': cashoutMultiplier = 1.3 + Math.random() * 0.5; break;
-                case 'medium': cashoutMultiplier = 1.5 + Math.random() * 1.0; break;
-                case 'high': cashoutMultiplier = 2.0 + Math.random() * 1.5; break;
-                default: cashoutMultiplier = 1.5 + Math.random() * 1.0;
+                case 'very_low':
+                    cashoutMultiplier = 1.1 + Math.random() * 0.3; // 1.1-1.4
+                    break;
+                case 'low':
+                    cashoutMultiplier = 1.3 + Math.random() * 0.4; // 1.3-1.7
+                    break;
+                case 'medium':
+                    cashoutMultiplier = 1.5 + Math.random() * 0.5; // 1.5-2.0
+                    break;
+                case 'high':
+                    cashoutMultiplier = 1.8 + Math.random() * 0.7; // 1.8-2.5
+                    break;
+                default:
+                    cashoutMultiplier = 1.5 + Math.random() * 0.5;
             }
             
             if (cashoutMultiplier >= gameState.crashPoint) return;
@@ -1155,6 +1178,10 @@
             cashoutBtn.disabled = true;
             updatePlayersGrid();
             updateProfileStats();
+            
+            // Show rounded multiplier in status
+            const roundedMultiplier = roundToOneDecimal(gameState.currentMultiplier);
+            gameStatus.textContent = `✅ Cashed out at ${roundedMultiplier.toFixed(1)}x! +${winnings.toFixed(2)} TON`;
         }
         
         // Place bet
