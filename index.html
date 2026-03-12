@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Crash - Kitty Adventure</title>
+    <title>Kitty Crash</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -87,6 +88,7 @@
             justify-content: center;
             font-weight: bold;
             color: #1a1b2f;
+            font-size: 18px;
         }
         
         .player-info {
@@ -122,6 +124,46 @@
             min-height: 500px;
             display: flex;
             flex-direction: column;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700, #ffb347);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #1a1b2f;
+        }
+        
+        .user-details {
+            flex: 1;
+        }
+        
+        .user-name {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .user-id {
+            color: #8b8ca7;
+            font-size: 12px;
         }
         
         .round-info {
@@ -423,6 +465,14 @@
             font-size: 20px;
         }
         
+        /* Loading */
+        .loading {
+            text-align: center;
+            color: #ffd700;
+            padding: 40px;
+            font-size: 18px;
+        }
+        
         /* Responsive */
         @media (max-width: 900px) {
             .game-container {
@@ -432,7 +482,7 @@
     </style>
 </head>
 <body>
-    <div class="game-container">
+    <div class="game-container" id="gameContainer" style="display: none;">
         <!-- Left Panel - Players -->
         <div class="players-panel">
             <div class="panel-title">🎮 Players in Game</div>
@@ -450,6 +500,14 @@
         
         <!-- Center Panel - Game -->
         <div class="game-panel">
+            <div class="user-profile" id="userProfile">
+                <div class="user-avatar" id="userAvatar">👤</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-id" id="userId">@username</div>
+                </div>
+            </div>
+            
             <div class="round-info">
                 <div class="round-number">Round #<span id="roundNumber">1</span></div>
                 <div class="timer" id="timer">Next: 5s</div>
@@ -490,11 +548,21 @@
         </div>
     </div>
 
+    <div class="loading" id="loading">
+        <div style="font-size: 48px; margin-bottom: 20px;">🐱</div>
+        <div>Loading Telegram profile...</div>
+    </div>
+
     <script>
+        // Telegram WebApp integration
+        let tg = window.Telegram?.WebApp;
+        
         // Game state
         let currentUser = {
-            id: 'user_' + Math.random().toString(36).substr(2, 9),
-            name: 'Player_' + Math.floor(Math.random() * 1000),
+            id: null,
+            name: 'Unknown',
+            username: null,
+            avatar: '👤',
             balance: 1000,
             currentBet: 0,
             hasBet: false,
@@ -537,11 +605,109 @@
         const crashTextEl = document.getElementById('crashText');
         const multiplierEl = document.getElementById('multiplier');
         const explosionEl = document.getElementById('explosion');
+        const gameContainer = document.getElementById('gameContainer');
+        const loadingEl = document.getElementById('loading');
+        
+        // Initialize Telegram and load user profile
+        function initTelegram() {
+            if (tg) {
+                // Expand to full height
+                tg.expand();
+                tg.ready();
+                
+                // Get user info from Telegram
+                const user = tg.initDataUnsafe?.user;
+                
+                if (user) {
+                    // Set user data
+                    currentUser.id = user.id;
+                    currentUser.name = user.first_name || 'Player';
+                    if (user.last_name) {
+                        currentUser.name += ' ' + user.last_name;
+                    }
+                    currentUser.username = user.username;
+                    
+                    // Generate avatar from first letter
+                    currentUser.avatar = currentUser.name.charAt(0).toUpperCase();
+                    
+                    // Update UI
+                    document.getElementById('userName').textContent = currentUser.name;
+                    document.getElementById('userId').textContent = user.username ? '@' + user.username : 'ID: ' + user.id;
+                    document.getElementById('userAvatar').textContent = currentUser.avatar;
+                    
+                    // Set theme colors
+                    if (tg.themeParams) {
+                        document.body.style.background = tg.themeParams.bg_color || document.body.style.background;
+                    }
+                    
+                    // Hide loading, show game
+                    loadingEl.style.display = 'none';
+                    gameContainer.style.display = 'grid';
+                    
+                    // Start the game
+                    init();
+                    
+                    // Send ready event to Telegram
+                    tg.sendData(JSON.stringify({
+                        event: 'game_loaded',
+                        user_id: user.id
+                    }));
+                    
+                } else {
+                    // Demo mode if no user (for testing outside Telegram)
+                    currentUser.name = 'Demo Player';
+                    currentUser.avatar = '👤';
+                    document.getElementById('userName').textContent = 'Demo Player';
+                    document.getElementById('userId').textContent = '@demo_user';
+                    document.getElementById('userAvatar').textContent = '👤';
+                    
+                    loadingEl.style.display = 'none';
+                    gameContainer.style.display = 'grid';
+                    
+                    init();
+                }
+            } else {
+                // Demo mode if Telegram WebApp not available
+                console.log('Telegram WebApp not available, running in demo mode');
+                currentUser.name = 'Demo Player';
+                currentUser.avatar = '👤';
+                document.getElementById('userName').textContent = 'Demo Player';
+                document.getElementById('userId').textContent = '@demo_user';
+                document.getElementById('userAvatar').textContent = '👤';
+                
+                loadingEl.style.display = 'none';
+                gameContainer.style.display = 'grid';
+                
+                init();
+            }
+        }
+        
+        // Handle /stars command or any data from bot
+        function handleTelegramData() {
+            if (tg && tg.initDataUnsafe?.start_param) {
+                const startParam = tg.initDataUnsafe.start_param;
+                console.log('Start param:', startParam);
+                
+                // Handle different commands
+                if (startParam === 'stars') {
+                    // Give bonus stars or show stars info
+                    currentUser.balance += 100;
+                    updateBalance();
+                    gameStatusEl.textContent = '✨ Welcome! You received 100 TON bonus!';
+                }
+            }
+        }
         
         // Start the game
         function init() {
+            handleTelegramData();
             startCountdown();
             updatePlayersList();
+        }
+        
+        // Update balance display
+        function updateBalance() {
+            document.getElementById('balance').textContent = currentUser.balance.toFixed(2);
         }
         
         // Start countdown between rounds
@@ -625,7 +791,7 @@
             // Bot betting logic - not all bots bet, and they bet at different times
             scheduleBotBets();
             
-            // Start multiplier (slower - every 100ms instead of 50ms)
+            // Start multiplier (slower - every 100ms)
             if (gameInterval) clearInterval(gameInterval);
             gameInterval = setInterval(() => {
                 if (gameState.isActive) {
@@ -637,7 +803,7 @@
                         crash();
                     }
                 }
-            }, 100); // Slower updates (was 50ms)
+            }, 100);
         }
         
         // Schedule bot bets at different times
@@ -758,6 +924,15 @@
                 updatePlayersList();
             }
             
+            // Send data to Telegram about round result
+            if (tg) {
+                tg.sendData(JSON.stringify({
+                    event: 'round_ended',
+                    crash_point: gameState.crashPoint,
+                    players: playersInGame
+                }));
+            }
+            
             // Start next round after 3 seconds
             setTimeout(() => {
                 startCountdown();
@@ -788,11 +963,20 @@
             currentUser.hasBet = false;
             
             // Update UI
-            document.getElementById('balance').textContent = currentUser.balance.toFixed(2);
+            updateBalance();
             cashoutBtn.disabled = true;
             
             // Show success message
             gameStatusEl.textContent = `✅ Cashed out at ${gameState.currentMultiplier.toFixed(2)}x! +${winnings.toFixed(2)} TON`;
+            
+            // Send data to Telegram
+            if (tg) {
+                tg.sendData(JSON.stringify({
+                    event: 'cashed_out',
+                    multiplier: gameState.currentMultiplier,
+                    winnings: winnings
+                }));
+            }
             
             updatePlayersList();
         }
@@ -828,8 +1012,16 @@
             currentUser.cashoutMultiplier = 0;
             
             // Update UI
-            document.getElementById('balance').textContent = currentUser.balance.toFixed(2);
+            updateBalance();
             placeBetBtn.disabled = true;
+            
+            // Send data to Telegram
+            if (tg) {
+                tg.sendData(JSON.stringify({
+                    event: 'bet_placed',
+                    amount: betAmount
+                }));
+            }
             
             updatePlayersList();
             
@@ -871,7 +1063,7 @@
                     bet: currentUser.currentBet,
                     cashout: currentUser.cashoutMultiplier,
                     isCurrent: true,
-                    avatar: '👤'
+                    avatar: currentUser.avatar
                 });
                 playersList.appendChild(userItem);
             }
@@ -940,8 +1132,8 @@
             }
         }
         
-        // Initialize the game
-        init();
+        // Initialize Telegram
+        initTelegram();
     </script>
 </body>
 </html>
