@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Crash Game</title>
+    <title>TON Crash - Online Multiplayer</title>
     <style>
         * {
             margin: 0;
@@ -13,126 +13,220 @@
         }
         
         body {
-            background: linear-gradient(135deg, #1a1b2f 0%, #2a2f4f 100%);
+            background: linear-gradient(135deg, #0a0b1a 0%, #1a1f3a 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 16px;
+            padding: 12px;
         }
         
         .game-container {
-            max-width: 500px;
+            max-width: 1200px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 12px;
+            background: rgba(10, 11, 26, 0.95);
             border-radius: 32px;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        /* Telegram WebApp header space */
-        .tg-header {
-            height: 20px;
-            margin-bottom: 16px;
-            color: #8b8ca7;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        /* Balance card */
-        .balance-card {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
         
-        .balance-label {
+        /* Left Panel - Players */
+        .players-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .panel-title {
             color: #8b8ca7;
             font-size: 14px;
-            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .players-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .player-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            transition: all 0.2s;
         }
         
-        .ton-icon {
-            width: 20px;
-            height: 20px;
-            background: #0088cc;
+        .player-item.current {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: #ffd700;
+        }
+        
+        .player-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ffd700, #ffb347);
             border-radius: 50%;
-            display: inline-flex;
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            color: white;
-        }
-        
-        .balance-amount {
-            font-size: 36px;
             font-weight: bold;
+            color: #1a1b2f;
+        }
+        
+        .player-info {
+            flex: 1;
+        }
+        
+        .player-name {
             color: white;
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
         
-        .ton-symbol {
+        .player-bet {
             color: #ffd700;
-            font-size: 24px;
+            font-size: 12px;
+            font-weight: 600;
         }
         
-        /* Multiplier display */
-        .multiplier-container {
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 30px;
-            padding: 40px 20px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 2px solid #ffd700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        .player-cashout {
+            color: #00c853;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        /* Center Panel - Game Area */
+        .game-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 32px;
+            padding: 24px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
             position: relative;
-            overflow: hidden;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .round-info {
+            display: flex;
+            justify-content: space-between;
+            color: #8b8ca7;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .round-number {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .timer {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .timer.warning {
+            color: #ffd700;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .multiplier-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 20px 0;
         }
         
         .multiplier {
-            font-size: 72px;
-            font-weight: 800;
+            font-size: 120px;
+            font-weight: 900;
             color: #ffd700;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
             transition: all 0.1s ease;
+            z-index: 2;
+            position: relative;
         }
         
         .multiplier.crashed {
             color: #ff4d4d;
-            text-shadow: 0 0 20px rgba(255, 77, 77, 0.5);
+            text-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        .explosion {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,77,77,0.8) 0%, rgba(255,77,77,0) 70%);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: explode 0.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        @keyframes explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         
         .game-status {
-            margin-top: 10px;
+            text-align: center;
             font-size: 18px;
             color: #8b8ca7;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            margin: 20px 0;
         }
         
-        /* Game controls */
-        .bet-section {
+        .bet-controls {
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 20px;
-            margin-bottom: 20px;
         }
         
         .bet-input-group {
             display: flex;
-            align-items: center;
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         
         .bet-input {
@@ -143,21 +237,21 @@
             padding: 16px;
             color: white;
             font-size: 18px;
-            font-weight: 500;
         }
         
-        .bet-input:focus {
-            outline: none;
-            border-color: #ffd700;
+        .bet-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .bet-presets {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
+            margin-bottom: 16px;
         }
         
         .preset-btn {
-            flex: 1;
             background: rgba(255, 215, 0, 0.1);
             border: 1px solid rgba(255, 215, 0, 0.3);
             border-radius: 12px;
@@ -168,19 +262,22 @@
             transition: all 0.2s;
         }
         
-        .preset-btn:hover {
+        .preset-btn:hover:not(:disabled) {
             background: rgba(255, 215, 0, 0.2);
         }
         
-        /* Action buttons */
+        .preset-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
         .action-buttons {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 16px;
         }
         
         .btn {
-            flex: 1;
             padding: 18px;
             border: none;
             border-radius: 20px;
@@ -188,19 +285,11 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
         
         .btn-primary {
             background: #ffd700;
             color: #1a1b2f;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
         }
         
         .btn-primary:hover:not(:disabled) {
@@ -212,7 +301,6 @@
         .btn-success {
             background: #00c853;
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
         }
         
         .btn-success:hover:not(:disabled) {
@@ -220,361 +308,479 @@
             transform: translateY(-2px);
         }
         
-        /* TON Connect button */
-        .ton-connect {
-            background: #0088cc;
-            border: none;
-            border-radius: 16px;
-            padding: 12px 24px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
         
-        .ton-connect:hover {
-            background: #00a3e0;
+        /* Right Panel - History & Stats */
+        .history-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 16px;
         }
         
-        /* History */
-        .history {
+        .history-list {
             display: flex;
+            flex-direction: column;
             gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 20px;
+            margin-top: 16px;
+            max-height: 400px;
+            overflow-y: auto;
         }
         
         .history-item {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
-            padding: 8px 12px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #ffd700;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #ffd700;
         }
         
         .history-item.crash {
+            border-left-color: #ff4d4d;
+        }
+        
+        .history-multiplier {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        
+        .history-item.crash .history-multiplier {
             color: #ff4d4d;
         }
         
+        .history-players {
+            color: #8b8ca7;
+            font-size: 12px;
+        }
+        
+        .history-time {
+            color: #4a4b65;
+            font-size: 10px;
+        }
+        
+        /* Balance */
+        .balance-card {
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #ffd700;
+        }
+        
+        .balance-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .ton-symbol {
+            color: #ffd700;
+            font-size: 20px;
+        }
+        
         /* Responsive */
-        @media (max-width: 480px) {
-            .multiplier {
-                font-size: 48px;
+        @media (max-width: 900px) {
+            .game-container {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <!-- Telegram WebApp header -->
-        <div class="tg-header">
-            <span>TON Crash Game</span>
-            <span id="user-name">Anonymous</span>
-        </div>
-        
-        <!-- Balance Card -->
-        <div class="balance-card">
-            <div class="balance-label">
-                <span class="ton-icon">Ⓣ</span>
-                Your Balance
+        <!-- Left Panel - Players -->
+        <div class="players-panel">
+            <div class="panel-title">🎮 Players in Game</div>
+            <div class="balance-card">
+                <div style="color: #8b8ca7; font-size: 12px; margin-bottom: 8px;">Your Balance</div>
+                <div class="balance-amount">
+                    <span id="balance">1000.00</span>
+                    <span class="ton-symbol">TON</span>
+                </div>
             </div>
-            <div class="balance-amount">
-                <span id="balance">100.00</span>
-                <span class="ton-symbol">TON</span>
+            <div class="players-list" id="playersList">
+                <!-- Players will be added here dynamically -->
             </div>
         </div>
         
-        <!-- TON Connect Button -->
-        <button class="ton-connect" id="connectWallet" onclick="connectWallet()">
-            <span>🔌</span>
-            Connect TON Wallet
-        </button>
-        
-        <!-- Multiplier Display -->
-        <div class="multiplier-container">
-            <div class="multiplier" id="multiplier">1.00x</div>
-            <div class="game-status" id="gameStatus">Waiting for next round</div>
-        </div>
-        
-        <!-- Betting Section -->
-        <div class="bet-section">
-            <div class="bet-input-group">
-                <input type="number" id="betAmount" class="bet-input" value="1.0" min="0.1" step="0.1" placeholder="Bet amount">
+        <!-- Center Panel - Game -->
+        <div class="game-panel">
+            <div class="round-info">
+                <div class="round-number">Round #<span id="roundNumber">1</span></div>
+                <div class="timer" id="timer">Betting: 5s</div>
             </div>
             
-            <div class="bet-presets">
-                <button class="preset-btn" onclick="setBet(0.5)">0.5 TON</button>
-                <button class="preset-btn" onclick="setBet(1.0)">1 TON</button>
-                <button class="preset-btn" onclick="setBet(2.0)">2 TON</button>
-                <button class="preset-btn" onclick="setBet(5.0)">5 TON</button>
+            <div class="multiplier-container" id="multiplierContainer">
+                <div class="multiplier" id="multiplier">1.00x</div>
+                <div class="explosion" id="explosion" style="display: none;"></div>
+            </div>
+            
+            <div class="game-status" id="gameStatus">Betting open - 5 seconds left</div>
+            
+            <div class="bet-controls">
+                <div class="bet-input-group">
+                    <input type="number" id="betAmount" class="bet-input" value="1.0" min="0.1" step="0.1">
+                </div>
+                <div class="bet-presets">
+                    <button class="preset-btn" onclick="setBet(0.5)" id="preset05">0.5 TON</button>
+                    <button class="preset-btn" onclick="setBet(1.0)" id="preset1">1 TON</button>
+                    <button class="preset-btn" onclick="setBet(2.0)" id="preset2">2 TON</button>
+                    <button class="preset-btn" onclick="setBet(5.0)" id="preset5">5 TON</button>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="placeBetBtn" onclick="placeBet()">Place Bet</button>
+                    <button class="btn btn-success" id="cashoutBtn" onclick="cashout()" disabled>Cash Out</button>
+                </div>
             </div>
         </div>
         
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button class="btn btn-primary" id="placeBetBtn" onclick="placeBet()">Place Bet</button>
-            <button class="btn btn-success" id="cashoutBtn" onclick="cashout()" disabled>Cash Out</button>
-        </div>
-        
-        <!-- History -->
-        <div class="history" id="history">
-            <div class="history-item">2.34x</div>
-            <div class="history-item crash">1.12x</div>
-            <div class="history-item">3.45x</div>
-            <div class="history-item">1.67x</div>
+        <!-- Right Panel - History -->
+        <div class="history-panel">
+            <div class="panel-title">📊 Round History</div>
+            <div class="history-list" id="historyList">
+                <!-- History items will be added here -->
+            </div>
         </div>
     </div>
-    
+
     <script>
         // Game state
-        let balance = 100.0;
-        let currentMultiplier = 1.0;
-        let gameActive = false;
-        let hasBet = false;
-        let currentBet = 0;
+        let currentUser = {
+            id: 'user_' + Math.random().toString(36).substr(2, 9),
+            name: 'Player_' + Math.floor(Math.random() * 1000),
+            balance: 1000,
+            currentBet: 0,
+            hasBet: false,
+            cashoutMultiplier: 0
+        };
+        
+        let gameState = {
+            roundNumber: 1,
+            isActive: false,
+            bettingOpen: true,
+            currentMultiplier: 1.00,
+            crashPoint: 1.00,
+            bettingTimeLeft: 5,
+            players: []
+        };
+        
         let gameInterval = null;
-        let crashPoint = 1.0;
-        let walletConnected = false;
+        let bettingInterval = null;
+        let countdownInterval = null;
+        
+        // Initialize with some demo players
+        let demoPlayers = [
+            { id: 'demo1', name: 'CryptoKing', bet: 0, cashout: 0, avatar: '👑' },
+            { id: 'demo2', name: 'MoonHunter', bet: 0, cashout: 0, avatar: '🌙' },
+            { id: 'demo3', name: 'Whale', bet: 0, cashout: 0, avatar: '🐋' },
+            { id: 'demo4', name: 'LuckyOne', bet: 0, cashout: 0, avatar: '🍀' }
+        ];
         
         // DOM elements
-        const balanceEl = document.getElementById('balance');
-        const multiplierEl = document.getElementById('multiplier');
+        const timerEl = document.getElementById('timer');
         const gameStatusEl = document.getElementById('gameStatus');
         const placeBetBtn = document.getElementById('placeBetBtn');
         const cashoutBtn = document.getElementById('cashoutBtn');
         const betAmountInput = document.getElementById('betAmount');
-        const connectWalletBtn = document.getElementById('connectWallet');
-        const userNameEl = document.getElementById('user-name');
+        const presetBtns = document.querySelectorAll('.preset-btn');
         
-        // Telegram WebApp integration
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.expand(); // Expand to full height
-            tg.ready(); // Notify Telegram that app is ready
-            
-            // Get user info
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                userNameEl.textContent = user.first_name || 'Player';
-            }
-            
-            // Set theme colors
-            document.body.style.background = tg.themeParams.bg_color || document.body.style.background;
+        // Start the game
+        function init() {
+            startBettingPhase();
+            updatePlayersList();
         }
         
-        // TON Connect simulation (in real app, use @tonconnect/sdk)
-        function connectWallet() {
-            // This is a simulation - in real app, implement TON Connect
-            walletConnected = !walletConnected;
+        // Start betting phase (5 seconds)
+        function startBettingPhase() {
+            gameState.bettingOpen = true;
+            gameState.bettingTimeLeft = 5;
+            gameState.isActive = false;
             
-            if (walletConnected) {
-                connectWalletBtn.innerHTML = '<span>✅</span> Wallet Connected (Demo)';
-                connectWalletBtn.style.background = '#00c853';
-                // Add demo balance
-                balance = 1000;
-                updateBalance();
-            } else {
-                connectWalletBtn.innerHTML = '<span>🔌</span> Connect TON Wallet';
-                connectWalletBtn.style.background = '#0088cc';
-            }
-        }
-        
-        // Update balance display
-        function updateBalance() {
-            balanceEl.textContent = balance.toFixed(2);
-        }
-        
-        // Set bet amount from presets
-        function setBet(amount) {
-            betAmountInput.value = amount;
-        }
-        
-        // Place bet
-        function placeBet() {
-            if (!walletConnected) {
-                alert('Please connect TON wallet first!');
-                return;
-            }
-            
-            const betAmount = parseFloat(betAmountInput.value);
-            
-            if (betAmount > balance) {
-                alert('Insufficient balance!');
-                return;
-            }
-            
-            if (gameActive) {
-                alert('Wait for next round!');
-                return;
-            }
-            
-            if (hasBet) {
-                alert('You already have an active bet!');
-                return;
-            }
-            
-            // Deduct bet from balance
-            currentBet = betAmount;
-            balance -= betAmount;
-            updateBalance();
-            
-            hasBet = true;
-            placeBetBtn.disabled = true;
-            
-            // Start game immediately for demo
-            startGame();
-        }
-        
-        // Start new game round
-        function startGame() {
-            gameActive = true;
-            currentMultiplier = 1.0;
-            
-            // Generate random crash point (between 1.0 and 10.0 for demo)
-            crashPoint = 1.0 + Math.random() * 9.0;
+            // Enable betting controls
+            enableBettingControls(true);
             
             // Update UI
-            multiplierEl.classList.remove('crashed');
-            gameStatusEl.textContent = 'Game in progress...';
-            cashoutBtn.disabled = !hasBet;
+            timerEl.textContent = `Betting: ${gameState.bettingTimeLeft}s`;
+            timerEl.classList.add('warning');
+            gameStatusEl.textContent = `Betting open - ${gameState.bettingTimeLeft} seconds left`;
             
-            // Start multiplier increase
+            // Clear any existing intervals
+            if (bettingInterval) clearInterval(bettingInterval);
             if (gameInterval) clearInterval(gameInterval);
             
-            gameInterval = setInterval(() => {
-                // Increase multiplier
-                currentMultiplier += 0.01;
-                multiplierEl.textContent = currentMultiplier.toFixed(2) + 'x';
+            // Start betting countdown
+            bettingInterval = setInterval(() => {
+                gameState.bettingTimeLeft--;
+                timerEl.textContent = `Betting: ${gameState.bettingTimeLeft}s`;
+                gameStatusEl.textContent = `Betting open - ${gameState.bettingTimeLeft} seconds left`;
                 
-                // Check for crash
-                if (currentMultiplier >= crashPoint) {
-                    crash();
+                if (gameState.bettingTimeLeft <= 0) {
+                    clearInterval(bettingInterval);
+                    startGameRound();
                 }
-            }, 50); // Update every 50ms for smooth animation
-            
-            // Auto-crash timer (just for safety)
-            setTimeout(() => {
-                if (gameActive) {
-                    crash();
-                }
-            }, 30000); // Max 30 seconds per round
+            }, 1000);
         }
         
-        // Cash out
-        function cashout() {
-            if (!gameActive || !hasBet) {
-                alert('No active bet to cash out!');
-                return;
-            }
+        // Start actual game round
+        function startGameRound() {
+            gameState.bettingOpen = false;
+            gameState.isActive = true;
+            gameState.currentMultiplier = 1.00;
+            gameState.crashPoint = 1.00 + (Math.random() * 4.00); // Random between 1.00 and 5.00 for small x's
             
-            // Calculate winnings
-            const winnings = currentBet * currentMultiplier;
-            balance += winnings;
-            updateBalance();
+            // Disable betting controls
+            enableBettingControls(false);
             
-            // Add to history
-            addToHistory(currentMultiplier, false);
+            // Update UI
+            timerEl.textContent = 'Game in progress';
+            timerEl.classList.remove('warning');
+            document.getElementById('multiplier').textContent = '1.00x';
+            document.getElementById('multiplier').classList.remove('crashed');
+            document.getElementById('explosion').style.display = 'none';
+            gameStatusEl.textContent = 'Game in progress...';
             
-            // Show success
-            gameStatusEl.textContent = `Cashed out at ${currentMultiplier.toFixed(2)}x! +${winnings.toFixed(2)} TON`;
+            // Update demo players bets for this round
+            demoPlayers = demoPlayers.map(p => ({
+                ...p,
+                bet: Math.random() > 0.4 ? parseFloat((Math.random() * 5).toFixed(2)) : 0,
+                cashout: 0
+            }));
             
-            // Reset for next round
-            resetRound();
+            updatePlayersList();
+            
+            // Start multiplier
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(() => {
+                if (gameState.isActive) {
+                    gameState.currentMultiplier += 0.01;
+                    document.getElementById('multiplier').textContent = gameState.currentMultiplier.toFixed(2) + 'x';
+                    
+                    // Check for crash
+                    if (gameState.currentMultiplier >= gameState.crashPoint) {
+                        crash();
+                    }
+                }
+            }, 50);
+        }
+        
+        // Enable/disable betting controls
+        function enableBettingControls(enabled) {
+            betAmountInput.disabled = !enabled;
+            presetBtns.forEach(btn => {
+                btn.disabled = !enabled;
+            });
+            
+            // Place bet button is enabled only during betting phase AND if user hasn't bet yet
+            placeBetBtn.disabled = !enabled || currentUser.hasBet;
+            
+            // Cashout button is enabled only during active game AND if user has bet and hasn't cashed out
+            cashoutBtn.disabled = !gameState.isActive || !currentUser.hasBet || currentUser.cashoutMultiplier > 0;
         }
         
         // Crash the game
         function crash() {
-            if (!gameActive) return;
-            
-            gameActive = false;
+            gameState.isActive = false;
             clearInterval(gameInterval);
             
-            multiplierEl.classList.add('crashed');
+            // Show explosion animation
+            const multiplier = document.getElementById('multiplier');
+            const explosion = document.getElementById('explosion');
             
-            // Add crash to history
-            addToHistory(crashPoint, true);
+            multiplier.classList.add('crashed');
+            explosion.style.display = 'block';
             
-            if (hasBet) {
-                gameStatusEl.textContent = `CRASHED at ${crashPoint.toFixed(2)}x! You lost ${currentBet.toFixed(2)} TON`;
-                hasBet = false;
-            } else {
-                gameStatusEl.textContent = `Crashed at ${crashPoint.toFixed(2)}x`;
+            // Count how many players were in the game
+            const playersInGame = demoPlayers.filter(p => p.bet > 0).length + (currentUser.hasBet ? 1 : 0);
+            
+            // Add to history
+            addToHistory(gameState.crashPoint, playersInGame);
+            
+            gameStatusEl.textContent = `💥 CRASH at ${gameState.crashPoint.toFixed(2)}x!`;
+            
+            // Check if current user lost bet
+            if (currentUser.hasBet && currentUser.cashoutMultiplier === 0) {
+                // User lost their bet
+                currentUser.hasBet = false;
+                currentUser.currentBet = 0;
+                gameStatusEl.textContent += ` You lost ${currentUser.currentBet.toFixed(2)} TON`;
+                updatePlayersList();
             }
             
-            // Schedule next round
+            // Start next betting phase after 2 seconds
             setTimeout(() => {
-                multiplierEl.textContent = '1.00x';
-                multiplierEl.classList.remove('crashed');
-                gameStatusEl.textContent = 'Place your bet!';
-                placeBetBtn.disabled = false;
-                cashoutBtn.disabled = true;
-            }, 3000);
-        }
-        
-        // Reset round after cashout
-        function resetRound() {
-            gameActive = false;
-            hasBet = false;
-            clearInterval(gameInterval);
-            
-            placeBetBtn.disabled = false;
-            cashoutBtn.disabled = true;
-            
-            // Schedule next round
-            setTimeout(() => {
-                multiplierEl.textContent = '1.00x';
-                gameStatusEl.textContent = 'Place your bet!';
+                startBettingPhase();
             }, 2000);
         }
         
-        // Add result to history
-        function addToHistory(multiplier, isCrash) {
-            const historyEl = document.getElementById('history');
-            const item = document.createElement('div');
-            item.className = `history-item ${isCrash ? 'crash' : ''}`;
-            item.textContent = multiplier.toFixed(2) + 'x';
+        // Cash out
+        function cashout() {
+            if (!gameState.isActive) {
+                alert('Game is not active!');
+                return;
+            }
             
-            historyEl.insertBefore(item, historyEl.firstChild);
+            if (!currentUser.hasBet) {
+                alert('No active bet!');
+                return;
+            }
             
-            // Keep only last 8 items
-            while (historyEl.children.length > 8) {
-                historyEl.removeChild(historyEl.lastChild);
+            if (currentUser.cashoutMultiplier > 0) {
+                alert('Already cashed out!');
+                return;
+            }
+            
+            // Calculate winnings
+            const winnings = currentUser.currentBet * gameState.currentMultiplier;
+            currentUser.balance += winnings;
+            currentUser.cashoutMultiplier = gameState.currentMultiplier;
+            currentUser.hasBet = false;
+            
+            // Update UI
+            document.getElementById('balance').textContent = currentUser.balance.toFixed(2);
+            cashoutBtn.disabled = true;
+            
+            // Show success message
+            gameStatusEl.textContent = `✅ Cashed out at ${gameState.currentMultiplier.toFixed(2)}x! +${winnings.toFixed(2)} TON`;
+            
+            updatePlayersList();
+        }
+        
+        // Place bet
+        function placeBet() {
+            if (!gameState.bettingOpen) {
+                alert('Betting is closed! Wait for next round.');
+                return;
+            }
+            
+            if (currentUser.hasBet) {
+                alert('You already have an active bet for this round!');
+                return;
+            }
+            
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+            
+            if (betAmount > currentUser.balance) {
+                alert('Insufficient balance!');
+                return;
+            }
+            
+            if (betAmount < 0.1) {
+                alert('Minimum bet is 0.1 TON');
+                return;
+            }
+            
+            // Place bet
+            currentUser.balance -= betAmount;
+            currentUser.currentBet = betAmount;
+            currentUser.hasBet = true;
+            currentUser.cashoutMultiplier = 0;
+            
+            // Update UI
+            document.getElementById('balance').textContent = currentUser.balance.toFixed(2);
+            placeBetBtn.disabled = true; // Can't place another bet this round
+            
+            updatePlayersList();
+            
+            // Show confirmation
+            gameStatusEl.textContent = `Bet placed: ${betAmount} TON`;
+        }
+        
+        // Set bet amount from presets
+        function setBet(amount) {
+            if (gameState.bettingOpen) {
+                document.getElementById('betAmount').value = amount;
             }
         }
         
-        // Initialize
-        updateBalance();
-        
-        // Demo: auto-start rounds when no bets
-        setInterval(() => {
-            if (!gameActive && !hasBet) {
-                // Demo round without bets
-                crashPoint = 1.0 + Math.random() * 5.0;
-                gameActive = true;
-                currentMultiplier = 1.0;
-                
-                gameStatusEl.textContent = 'Demo round...';
-                
-                if (gameInterval) clearInterval(gameInterval);
-                
-                gameInterval = setInterval(() => {
-                    currentMultiplier += 0.01;
-                    multiplierEl.textContent = currentMultiplier.toFixed(2) + 'x';
-                    
-                    if (currentMultiplier >= crashPoint) {
-                        crash();
-                    }
-                }, 50);
+        // Update players list
+        function updatePlayersList() {
+            const playersList = document.getElementById('playersList');
+            playersList.innerHTML = '';
+            
+            // Add current user if they have a bet
+            if (currentUser.hasBet) {
+                const userItem = createPlayerElement({
+                    id: currentUser.id,
+                    name: currentUser.name + ' (You)',
+                    bet: currentUser.currentBet,
+                    cashout: currentUser.cashoutMultiplier,
+                    isCurrent: true,
+                    avatar: '👤'
+                });
+                playersList.appendChild(userItem);
             }
-        }, 8000);
+            
+            // Add demo players
+            demoPlayers.forEach(player => {
+                if (player.bet > 0 || player.cashout > 0) {
+                    const playerItem = createPlayerElement(player);
+                    playersList.appendChild(playerItem);
+                }
+            });
+            
+            // If no players, show message
+            if (playersList.children.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.style.color = '#4a4b65';
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.style.padding = '20px';
+                emptyMsg.textContent = 'No bets this round';
+                playersList.appendChild(emptyMsg);
+            }
+        }
+        
+        function createPlayerElement(player) {
+            const div = document.createElement('div');
+            div.className = `player-item ${player.isCurrent ? 'current' : ''}`;
+            
+            const avatar = player.avatar || '👤';
+            const betText = player.bet > 0 ? `${player.bet} TON` : '';
+            const cashoutText = player.cashout > 0 ? `💰 ${player.cashout}x` : '';
+            
+            div.innerHTML = `
+                <div class="player-avatar">${avatar}</div>
+                <div class="player-info">
+                    <div class="player-name">${player.name}</div>
+                    ${betText ? `<div class="player-bet">⬆️ ${betText}</div>` : ''}
+                    ${cashoutText ? `<div class="player-cashout">✅ ${cashoutText}</div>` : ''}
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // Add to history
+        function addToHistory(multiplier, playersCount) {
+            const historyList = document.getElementById('historyList');
+            const item = document.createElement('div');
+            item.className = `history-item ${multiplier < 2 ? 'crash' : ''}`;
+            
+            const now = new Date();
+            const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            item.innerHTML = `
+                <div>
+                    <div class="history-multiplier">${multiplier.toFixed(2)}x</div>
+                    <div class="history-players">${playersCount} players</div>
+                </div>
+                <div class="history-time">${timeStr}</div>
+            `;
+            
+            historyList.insertBefore(item, historyList.firstChild);
+            
+            // Keep only last 15 items
+            while (historyList.children.length > 15) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+        
+        // Initialize the game
+        init();
     </script>
 </body>
 </html>
