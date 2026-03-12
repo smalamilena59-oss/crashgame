@@ -22,33 +22,99 @@
             padding: 8px;
         }
 
-        /* Main container - horizontal layout */
+        /* Main container */
         .app-container {
             width: 100%;
             max-width: 1200px;
             height: 95vh;
-            display: grid;
-            grid-template-columns: 280px 1fr 280px;
-            gap: 8px;
             background: rgba(20, 22, 36, 0.9);
             backdrop-filter: blur(10px);
             border-radius: 28px;
             padding: 8px;
             border: 1px solid rgba(255, 215, 0, 0.15);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Common panel styles */
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(12, 14, 24, 0.7);
+            border-radius: 40px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            color: #8b8ca7;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn i {
+            font-size: 18px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+        }
+
+        .nav-btn.active {
+            background: #ffd700;
+            color: #0f0f1a;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+        }
+
+        /* Panels */
         .panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(12, 14, 24, 0.7);
             backdrop-filter: blur(5px);
-            border-radius: 20px;
-            padding: 12px;
+            border-radius: 24px;
+            padding: 16px;
             border: 1px solid rgba(255, 215, 0, 0.1);
             display: flex;
             flex-direction: column;
-            height: 100%;
-            overflow: hidden;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .panel.hidden {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .panel.visible {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: all;
         }
 
         .panel-header {
@@ -56,7 +122,7 @@
             font-size: 13px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(255, 215, 0, 0.2);
             display: flex;
@@ -69,19 +135,14 @@
             font-size: 16px;
         }
 
-        /* ========== LEFT PANEL - LEADERBOARD ========== */
-        .leaderboard-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
+        /* ========== LEADERBOARD PANEL ========== */
         .leaderboard-stats {
             background: rgba(255, 215, 0, 0.05);
             border-radius: 16px;
             padding: 12px;
             text-align: center;
             border: 1px solid rgba(255, 215, 0, 0.15);
+            margin-bottom: 16px;
         }
 
         .total-bets-label {
@@ -102,7 +163,6 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            padding-right: 2px;
         }
 
         .leaderboard-item {
@@ -113,12 +173,6 @@
             align-items: center;
             gap: 10px;
             border: 1px solid rgba(255, 215, 0, 0.08);
-            transition: all 0.2s;
-        }
-
-        .leaderboard-item:hover {
-            background: rgba(255, 215, 0, 0.05);
-            border-color: rgba(255, 215, 0, 0.3);
         }
 
         .leaderboard-rank {
@@ -164,14 +218,7 @@
             font-weight: 600;
         }
 
-        /* ========== CENTER PANEL - CRASH GAME ========== */
-        .crash-panel {
-            display: flex;
-            flex-direction: column;
-            padding: 12px;
-        }
-
-        /* Round info */
+        /* ========== CRASH PANEL ========== */
         .round-header {
             display: flex;
             justify-content: space-between;
@@ -210,7 +257,6 @@
             50% { opacity: 0.6; }
         }
 
-        /* Kitty game area */
         .game-area {
             flex: 1;
             background: rgba(0, 0, 0, 0.3);
@@ -223,8 +269,7 @@
             justify-content: center;
             position: relative;
             border: 2px solid rgba(255, 215, 0, 0.2);
-            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
-            min-height: 300px;
+            min-height: 250px;
         }
 
         .kitty-wrapper {
@@ -236,11 +281,10 @@
         }
 
         .kitty {
-            font-size: 100px;
+            font-size: 80px;
             transition: all 0.1s ease;
             filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4));
             margin-bottom: 10px;
-            z-index: 3;
         }
 
         .kitty.crashed {
@@ -248,23 +292,16 @@
         }
 
         @keyframes fall {
-            0% {
-                transform: translateY(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(150px) rotate(360deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(150px) rotate(360deg); opacity: 0; }
         }
 
         .multiplier {
-            font-size: 64px;
+            font-size: 48px;
             font-weight: 900;
             color: #ffd700;
             text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
             line-height: 1;
-            margin: 10px 0;
         }
 
         .multiplier.crashed {
@@ -273,19 +310,18 @@
         }
 
         .crash-text {
-            font-size: 36px;
+            font-size: 30px;
             font-weight: 900;
             color: #ff4d4d;
-            text-shadow: 0 0 30px rgba(255, 77, 77, 0.5);
             opacity: 0;
             transition: opacity 0.3s;
             position: absolute;
-            bottom: 30px;
+            bottom: 20px;
         }
 
         .crash-text.show {
             opacity: 1;
-            animation: shake 0.5s ease-in-out;
+            animation: shake 0.5s;
         }
 
         @keyframes shake {
@@ -294,24 +330,6 @@
             20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
 
-        .explosion {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(255,77,77,0.6) 0%, rgba(255,77,77,0) 70%);
-            border-radius: 50%;
-            transform: scale(0);
-            animation: explode 0.5s ease-out forwards;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        @keyframes explode {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(2); opacity: 0; }
-        }
-
-        /* History bar */
         .history-bar {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 20px;
@@ -353,12 +371,11 @@
             border-color: rgba(255, 77, 77, 0.3);
         }
 
-        /* Players list at bottom */
         .players-bar {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 20px;
             padding: 10px;
-            margin-top: 8px;
+            margin: 8px 0;
         }
 
         .players-title {
@@ -414,11 +431,6 @@
             color: #0f0f1a;
         }
 
-        .chip-info {
-            display: flex;
-            flex-direction: column;
-        }
-
         .chip-name {
             color: white;
             font-size: 11px;
@@ -435,13 +447,6 @@
             font-weight: 600;
         }
 
-        .chip-cashout {
-            color: #00c853;
-            font-size: 9px;
-            font-weight: 600;
-        }
-
-        /* Bet controls */
         .bet-controls {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 20px;
@@ -466,11 +471,6 @@
             font-weight: 600;
         }
 
-        .bet-input:focus {
-            outline: none;
-            border-color: #ffd700;
-        }
-
         .bet-presets {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -487,11 +487,6 @@
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .preset-btn:hover:not(:disabled) {
-            background: rgba(255, 215, 0, 0.15);
         }
 
         .action-buttons {
@@ -513,23 +508,11 @@
         .btn-primary {
             background: #ffd700;
             color: #0f0f1a;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: #ffed4a;
-            transform: translateY(-2px);
         }
 
         .btn-success {
             background: #00c853;
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
-        }
-
-        .btn-success:hover:not(:disabled) {
-            background: #00e676;
-            transform: translateY(-2px);
         }
 
         .btn:disabled {
@@ -537,31 +520,26 @@
             cursor: not-allowed;
         }
 
-        /* ========== RIGHT PANEL - PROFILE ========== */
-        .profile-panel {
-            display: flex;
-            flex-direction: column;
-        }
-
+        /* ========== PROFILE PANEL ========== */
         .profile-card {
             background: rgba(255, 215, 0, 0.05);
             border-radius: 24px;
             padding: 20px;
             text-align: center;
             border: 1px solid rgba(255, 215, 0, 0.2);
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
         .profile-avatar {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             background: linear-gradient(135deg, #ffd700, #ffb347);
             border-radius: 50%;
             margin: 0 auto 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+            font-size: 48px;
             font-weight: 600;
             color: #0f0f1a;
             border: 3px solid #ffd700;
@@ -569,47 +547,46 @@
 
         .profile-name {
             color: white;
-            font-size: 18px;
+            font-size: 22px;
             font-weight: 700;
             margin-bottom: 4px;
         }
 
         .profile-username {
             color: #8b8ca7;
-            font-size: 12px;
-            margin-bottom: 16px;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
 
         .profile-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
         }
 
         .stat-item {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 16px;
-            padding: 10px;
+            padding: 12px;
         }
 
         .stat-label {
             color: #8b8ca7;
-            font-size: 10px;
+            font-size: 11px;
             text-transform: uppercase;
             margin-bottom: 4px;
         }
 
         .stat-value {
             color: #ffd700;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 700;
         }
 
         .balance-big {
             background: rgba(255, 215, 0, 0.1);
             border-radius: 20px;
-            padding: 16px;
+            padding: 20px;
             text-align: center;
             border: 1px solid #ffd700;
             margin-top: auto;
@@ -617,140 +594,137 @@
 
         .balance-label {
             color: #8b8ca7;
-            font-size: 11px;
+            font-size: 12px;
             text-transform: uppercase;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .balance-amount {
             color: white;
-            font-size: 28px;
+            font-size: 36px;
             font-weight: 700;
         }
 
         .balance-amount span {
             color: #ffd700;
-            font-size: 16px;
+            font-size: 20px;
             margin-left: 5px;
         }
 
-        /* Loading */
         .loading {
             text-align: center;
             color: #ffd700;
             padding: 40px;
         }
-
-        /* Responsive */
-        @media (max-width: 900px) {
-            .app-container {
-                grid-template-columns: 1fr;
-                height: auto;
-                gap: 8px;
-            }
-            
-            .panel {
-                height: auto;
-                max-height: none;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="app-container" id="gameContainer" style="display: none;">
-        <!-- LEFT PANEL - LEADERBOARD -->
-        <div class="panel leaderboard-panel">
-            <div class="panel-header">
-                <i>🏆</i> LEADERBOARD
-            </div>
-            
-            <div class="leaderboard-stats">
-                <div class="total-bets-label">Total Bets</div>
-                <div class="total-bets-value" id="totalBets">0 TON</div>
-            </div>
-            
-            <div class="leaderboard-list" id="leaderboardList">
-                <!-- Leaderboard items will be added here -->
-            </div>
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <button class="nav-btn active" onclick="switchPanel('leaderboard')" id="nav-leaderboard">
+                <i>🏆</i> Leaderboard
+            </button>
+            <button class="nav-btn" onclick="switchPanel('crash')" id="nav-crash">
+                <i>🐱</i> Crash
+            </button>
+            <button class="nav-btn" onclick="switchPanel('profile')" id="nav-profile">
+                <i>👤</i> Profile
+            </button>
         </div>
-        
-        <!-- CENTER PANEL - CRASH GAME -->
-        <div class="panel crash-panel">
-            <div class="round-header">
-                <div class="round-number">Round #<span id="roundNumber">1</span></div>
-                <div class="timer" id="timer">Next: 5s</div>
-            </div>
-            
-            <div class="game-area">
-                <div class="kitty-wrapper">
-                    <div class="kitty" id="kitty">🐱</div>
-                    <div class="multiplier" id="multiplier">1.00x</div>
-                    <div class="crash-text" id="crashText">CRASH!</div>
-                    <div class="explosion" id="explosion" style="display: none;"></div>
+
+        <!-- Content Area with Panels -->
+        <div class="content-area">
+            <!-- LEADERBOARD PANEL -->
+            <div class="panel visible" id="panel-leaderboard">
+                <div class="panel-header">
+                    <i>🏆</i> LEADERBOARD
                 </div>
-            </div>
-            
-            <!-- History Stripes -->
-            <div class="history-bar">
-                <div class="history-title">📊 ROUND HISTORY</div>
-                <div class="history-stripes" id="historyStripes">
-                    <!-- History stripes will be added here -->
-                </div>
-            </div>
-            
-            <!-- Players Bar -->
-            <div class="players-bar">
-                <div class="players-title">🎮 ACTIVE PLAYERS</div>
-                <div class="players-grid" id="playersGrid">
-                    <!-- Player chips will be added here -->
-                </div>
-            </div>
-            
-            <!-- Bet Controls -->
-            <div class="bet-controls">
-                <div class="bet-input-row">
-                    <input type="number" id="betAmount" class="bet-input" value="1.0" min="0.1" step="0.1" placeholder="Amount">
-                </div>
-                <div class="bet-presets">
-                    <button class="preset-btn" onclick="setBet(0.5)">0.5</button>
-                    <button class="preset-btn" onclick="setBet(1.0)">1.0</button>
-                    <button class="preset-btn" onclick="setBet(2.0)">2.0</button>
-                    <button class="preset-btn" onclick="setBet(5.0)">5.0</button>
-                </div>
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="placeBetBtn" onclick="placeBet()">PLACE BET</button>
-                    <button class="btn btn-success" id="cashoutBtn" onclick="cashout()" disabled>CASH OUT</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- RIGHT PANEL - PROFILE -->
-        <div class="panel profile-panel">
-            <div class="panel-header">
-                <i>👤</i> PROFILE
-            </div>
-            
-            <div class="profile-card">
-                <div class="profile-avatar" id="profileAvatar">👤</div>
-                <div class="profile-name" id="profileName">Loading...</div>
-                <div class="profile-username" id="profileUsername">@username</div>
                 
-                <div class="profile-stats">
-                    <div class="stat-item">
-                        <div class="stat-label">Total Bets</div>
-                        <div class="stat-value" id="userTotalBets">0</div>
+                <div class="leaderboard-stats">
+                    <div class="total-bets-label">Total Bets</div>
+                    <div class="total-bets-value" id="totalBets">0 TON</div>
+                </div>
+                
+                <div class="leaderboard-list" id="leaderboardList">
+                    <!-- Leaderboard items will be added here -->
+                </div>
+            </div>
+            
+            <!-- CRASH PANEL -->
+            <div class="panel hidden" id="panel-crash">
+                <div class="round-header">
+                    <div class="round-number">Round #<span id="roundNumber">1</span></div>
+                    <div class="timer" id="timer">Next: 5s</div>
+                </div>
+                
+                <div class="game-area">
+                    <div class="kitty-wrapper">
+                        <div class="kitty" id="kitty">🐱</div>
+                        <div class="multiplier" id="multiplier">1.00x</div>
+                        <div class="crash-text" id="crashText">CRASH!</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Win Rate</div>
-                        <div class="stat-value" id="userWinRate">0%</div>
+                </div>
+                
+                <div class="history-bar">
+                    <div class="history-title">📊 ROUND HISTORY</div>
+                    <div class="history-stripes" id="historyStripes">
+                        <!-- History stripes will be added here -->
+                    </div>
+                </div>
+                
+                <div class="players-bar">
+                    <div class="players-title">🎮 ACTIVE PLAYERS</div>
+                    <div class="players-grid" id="playersGrid">
+                        <!-- Player chips will be added here -->
+                    </div>
+                </div>
+                
+                <div class="bet-controls">
+                    <div class="bet-input-row">
+                        <input type="number" id="betAmount" class="bet-input" value="1.0" min="0.1" step="0.1" placeholder="Amount">
+                    </div>
+                    <div class="bet-presets">
+                        <button class="preset-btn" onclick="setBet(0.5)">0.5</button>
+                        <button class="preset-btn" onclick="setBet(1.0)">1.0</button>
+                        <button class="preset-btn" onclick="setBet(2.0)">2.0</button>
+                        <button class="preset-btn" onclick="setBet(5.0)">5.0</button>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="placeBetBtn" onclick="placeBet()">PLACE BET</button>
+                        <button class="btn btn-success" id="cashoutBtn" onclick="cashout()" disabled>CASH OUT</button>
                     </div>
                 </div>
             </div>
             
-            <div class="balance-big">
-                <div class="balance-label">Your Balance</div>
-                <div class="balance-amount">
-                    <span id="balance">1000.00</span><span>TON</span>
+            <!-- PROFILE PANEL -->
+            <div class="panel hidden" id="panel-profile">
+                <div class="panel-header">
+                    <i>👤</i> PROFILE
+                </div>
+                
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileAvatar">👤</div>
+                    <div class="profile-name" id="profileName">Loading...</div>
+                    <div class="profile-username" id="profileUsername">@username</div>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Total Bets</div>
+                            <div class="stat-value" id="userTotalBets">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Win Rate</div>
+                            <div class="stat-value" id="userWinRate">0%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="balance-big">
+                    <div class="balance-label">Your Balance</div>
+                    <div class="balance-amount">
+                        <span id="balance">1000.00</span><span>TON</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -810,9 +784,6 @@
             { id: 'bot5', name: 'Satoshi', bet: 0, cashout: 0, avatar: '🥷', risk: 'high' }
         ];
         
-        // History stripes
-        let historyStripes = [];
-        
         // DOM elements
         const timerEl = document.getElementById('timer');
         const placeBetBtn = document.getElementById('placeBetBtn');
@@ -822,9 +793,40 @@
         const kittyEl = document.getElementById('kitty');
         const crashTextEl = document.getElementById('crashText');
         const multiplierEl = document.getElementById('multiplier');
-        const explosionEl = document.getElementById('explosion');
         const gameContainer = document.getElementById('gameContainer');
         const loadingEl = document.getElementById('loading');
+        
+        // Navigation
+        const panels = {
+            leaderboard: document.getElementById('panel-leaderboard'),
+            crash: document.getElementById('panel-crash'),
+            profile: document.getElementById('panel-profile')
+        };
+        
+        const navBtns = {
+            leaderboard: document.getElementById('nav-leaderboard'),
+            crash: document.getElementById('nav-crash'),
+            profile: document.getElementById('nav-profile')
+        };
+        
+        // Switch panel function
+        function switchPanel(panelName) {
+            // Hide all panels
+            Object.values(panels).forEach(panel => {
+                panel.classList.remove('visible');
+                panel.classList.add('hidden');
+            });
+            
+            // Show selected panel
+            panels[panelName].classList.remove('hidden');
+            panels[panelName].classList.add('visible');
+            
+            // Update nav buttons
+            Object.values(navBtns).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            navBtns[panelName].classList.add('active');
+        }
         
         // Initialize Telegram
         function initTelegram() {
@@ -841,27 +843,17 @@
                         currentUser.name += ' ' + user.last_name;
                     }
                     currentUser.username = user.username;
-                    
-                    // Get photo if available
-                    if (user.photo_url) {
-                        // For demo, we'll use first letter
-                        currentUser.avatar = currentUser.name.charAt(0).toUpperCase();
-                    } else {
-                        currentUser.avatar = currentUser.name.charAt(0).toUpperCase();
-                    }
+                    currentUser.avatar = currentUser.name.charAt(0).toUpperCase();
                     
                     // Update profile UI
                     document.getElementById('profileName').textContent = currentUser.name;
                     document.getElementById('profileUsername').textContent = user.username ? '@' + user.username : 'ID: ' + user.id;
                     document.getElementById('profileAvatar').textContent = currentUser.avatar;
                     
-                    // Hide loading, show game
                     loadingEl.style.display = 'none';
-                    gameContainer.style.display = 'grid';
+                    gameContainer.style.display = 'flex';
                     
-                    // Start the game
                     init();
-                    
                 } else {
                     // Demo mode
                     currentUser.name = 'Demo Player';
@@ -871,7 +863,7 @@
                     document.getElementById('profileAvatar').textContent = '👤';
                     
                     loadingEl.style.display = 'none';
-                    gameContainer.style.display = 'grid';
+                    gameContainer.style.display = 'flex';
                     
                     init();
                 }
@@ -884,7 +876,7 @@
                 document.getElementById('profileAvatar').textContent = '👤';
                 
                 loadingEl.style.display = 'none';
-                gameContainer.style.display = 'grid';
+                gameContainer.style.display = 'flex';
                 
                 init();
             }
@@ -907,13 +899,11 @@
             const leaderboardList = document.getElementById('leaderboardList');
             leaderboardList.innerHTML = '';
             
-            // Add current user to leaderboard
             const allEntries = [
                 ...leaderboard,
                 { id: currentUser.id, name: currentUser.name + ' (You)', totalBet: currentUser.totalBets, avatar: currentUser.avatar }
             ].sort((a, b) => b.totalBet - a.totalBet).slice(0, 10);
             
-            // Calculate total bets
             const totalBets = allEntries.reduce((sum, entry) => sum + entry.totalBet, 0);
             document.getElementById('totalBets').textContent = totalBets.toFixed(2) + ' TON';
             
@@ -937,23 +927,19 @@
             const playersGrid = document.getElementById('playersGrid');
             playersGrid.innerHTML = '';
             
-            // Add current user if they have a bet
             if (currentUser.hasBet) {
-                const chip = createPlayerChip({
+                playersGrid.appendChild(createPlayerChip({
                     name: currentUser.name + ' (You)',
                     bet: currentUser.currentBet,
                     cashout: currentUser.cashoutMultiplier,
                     avatar: currentUser.avatar,
                     isCurrent: true
-                });
-                playersGrid.appendChild(chip);
+                }));
             }
             
-            // Add bot players with bets
             botPlayers.forEach(player => {
                 if (player.bet > 0 || player.cashout > 0) {
-                    const chip = createPlayerChip(player);
-                    playersGrid.appendChild(chip);
+                    playersGrid.appendChild(createPlayerChip(player));
                 }
             });
             
@@ -970,15 +956,12 @@
             const div = document.createElement('div');
             div.className = `player-chip ${player.isCurrent ? 'current' : ''}`;
             
-            const betText = player.bet > 0 ? `${player.bet} TON` : '';
-            const cashoutText = player.cashout > 0 ? `💰 ${player.cashout}x` : '';
-            
             div.innerHTML = `
                 <div class="chip-avatar">${player.avatar}</div>
                 <div class="chip-info">
                     <div class="chip-name">${player.name}</div>
-                    ${betText ? `<div class="chip-bet">⬆️ ${betText}</div>` : ''}
-                    ${cashoutText ? `<div class="chip-cashout">✅ ${cashoutText}</div>` : ''}
+                    ${player.bet ? `<div class="chip-bet">⬆️ ${player.bet} TON</div>` : ''}
+                    ${player.cashout ? `<div class="chip-bet">✅ ${player.cashout}x</div>` : ''}
                 </div>
             `;
             
@@ -994,7 +977,6 @@
             
             historyStripes.insertBefore(stripe, historyStripes.firstChild);
             
-            // Keep only last 15 stripes
             while (historyStripes.children.length > 15) {
                 historyStripes.removeChild(historyStripes.lastChild);
             }
@@ -1011,14 +993,10 @@
             timerEl.textContent = `Next: ${gameState.timeUntilNext}s`;
             timerEl.classList.add('warning');
             
-            // Reset kitty
             kittyEl.classList.remove('crashed');
-            kittyEl.style.opacity = '1';
-            kittyEl.style.transform = 'none';
             crashTextEl.classList.remove('show');
             multiplierEl.classList.remove('crashed');
             multiplierEl.textContent = '1.00x';
-            explosionEl.style.display = 'none';
             
             if (countdownInterval) clearInterval(countdownInterval);
             if (gameInterval) clearInterval(gameInterval);
@@ -1046,7 +1024,6 @@
             gameState.currentMultiplier = 1.00;
             gameState.roundNumber++;
             
-            // Generate crash point
             const rand = Math.random();
             if (rand < 0.1) {
                 gameState.crashPoint = 1.00;
@@ -1063,7 +1040,6 @@
             timerEl.classList.remove('warning');
             document.getElementById('roundNumber').textContent = gameState.roundNumber;
             
-            // Bot bets
             scheduleBotBets();
             
             if (gameInterval) clearInterval(gameInterval);
@@ -1097,7 +1073,6 @@
                             const betAmount = parseFloat((Math.random() * 4.5 + 0.5).toFixed(2));
                             botPlayers[botIndex].bet = betAmount;
                             
-                            // Add to leaderboard total
                             const leaderboardIndex = leaderboard.findIndex(l => l.id === bot.id);
                             if (leaderboardIndex !== -1) {
                                 leaderboard[leaderboardIndex].totalBet += betAmount;
@@ -1153,7 +1128,6 @@
             kittyEl.classList.add('crashed');
             crashTextEl.classList.add('show');
             multiplierEl.classList.add('crashed');
-            explosionEl.style.display = 'block';
             
             addToHistory(gameState.crashPoint);
             
@@ -1179,8 +1153,8 @@
             
             updateBalance();
             cashoutBtn.disabled = true;
-            
             updatePlayersGrid();
+            updateProfileStats();
         }
         
         // Place bet
